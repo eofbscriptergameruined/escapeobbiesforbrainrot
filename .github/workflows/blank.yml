@@ -1,0 +1,287 @@
+-- SERVICES
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+
+-- KILL PART REMOVER
+local killRemoveEnabled = false
+local killLoop = nil
+
+-- GET HRP
+local function getHRP()
+	local character = player.Character or player.CharacterAdded:Wait()
+	return character:WaitForChild("HumanoidRootPart")
+end
+
+-- WALK SPEED SYSTEM
+local desiredWalkSpeed = nil
+
+local function applyWalkSpeed()
+	while desiredWalkSpeed do
+		local char = player.Character
+		if char then
+			local hum = char:FindFirstChildOfClass("Humanoid")
+			if hum and hum.WalkSpeed ~= desiredWalkSpeed then
+				hum.WalkSpeed = desiredWalkSpeed
+			end
+		end
+		task.wait(0.2)
+	end
+end
+
+player.CharacterAdded:Connect(function(char)
+	if desiredWalkSpeed then
+		local hum = char:WaitForChild("Humanoid")
+		hum.WalkSpeed = desiredWalkSpeed
+	end
+end)
+
+-- TWEEN FUNCTION
+local function tweenTo(targetPart)
+	if targetPart and targetPart:IsA("BasePart") then
+		local hrp = getHRP()
+
+		TweenService:Create(
+			hrp,
+			TweenInfo.new(10, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+			{CFrame = targetPart.CFrame}
+		):Play()
+	end
+end
+
+-- PATHS
+local world = workspace.World
+local spawns = world.Spawns
+
+-- LOCATIONS
+local locations = {
+	{"Common Area 1", spawns["1"]},
+	{"Common Area 2", spawns["2"]},
+	{"Rare Area 1", spawns["3"]},
+	{"Rare Area 2", spawns["4"]},
+	{"Epic Area 1", spawns["5"]},
+	{"Epic Area 2", spawns["6"]},
+	{"Legendary Area 1", spawns["7"]},
+	{"Legendary Area 2", spawns["8"]},
+	{"Mythic Area 1", spawns["9"]},
+	{"Mythic Area 2", spawns["10"]},
+	{"Secret Area", spawns["11"]},
+	{"Event Area", function()
+		return spawns:WaitForChild("Event")
+	end}
+}
+
+-- GUI
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = player:WaitForChild("PlayerGui")
+screenGui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 200, 0, 210)
+frame.Position = UDim2.new(0.5, -150, 0.5, -75)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,15)
+
+-- TITLE
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -100, 0, 35)
+title.Position = UDim2.new(0, 10, 0, 5)
+title.Text = "Escape Obbies For Brainrots!"
+title.TextColor3 = Color3.new(1,1,1)
+title.BackgroundTransparency = 1
+title.TextScaled = true
+title.Parent = frame
+
+-- CLOSE BUTTON
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0, 5)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.new(1,1,1)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeButton.Parent = frame
+Instance.new("UICorner", closeButton).CornerRadius = UDim.new(1,0)
+
+closeButton.MouseButton1Click:Connect(function()
+	screenGui:Destroy()
+end)
+
+-- MINIMIZE
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+minimizeButton.Position = UDim2.new(1, -70, 0, 5)
+minimizeButton.Text = "-"
+minimizeButton.TextColor3 = Color3.new(1,1,1)
+minimizeButton.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+minimizeButton.Parent = frame
+Instance.new("UICorner", minimizeButton).CornerRadius = UDim.new(1,0)
+
+-- HOME BUTTON
+local homeButton = Instance.new("TextButton")
+homeButton.Size = UDim2.new(1, -20, 0, 35)
+homeButton.Position = UDim2.new(0, 10, 0, 45)
+homeButton.Text = "Home"
+homeButton.TextColor3 = Color3.new(1,1,1)
+homeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+homeButton.Parent = frame
+Instance.new("UICorner", homeButton).CornerRadius = UDim.new(0,12)
+
+homeButton.MouseButton1Click:Connect(function()
+	tweenTo(world.Map.Baseplate)
+end)
+
+-- DROPDOWN BUTTON
+local dropdownButton = Instance.new("TextButton")
+dropdownButton.Size = UDim2.new(1, -20, 0, 40)
+dropdownButton.Position = UDim2.new(0, 10, 0, 85)
+dropdownButton.Text = "Select Area ▼"
+dropdownButton.TextColor3 = Color3.new(1,1,1)
+dropdownButton.BackgroundColor3 = Color3.fromRGB(170, 0, 0)
+dropdownButton.Parent = frame
+Instance.new("UICorner", dropdownButton).CornerRadius = UDim.new(0,12)
+
+-- WALKSPEED UI
+local speedBox = Instance.new("TextBox")
+speedBox.Size = UDim2.new(0.6, -10, 0, 30)
+speedBox.Position = UDim2.new(0, 10, 0, 130)
+speedBox.PlaceholderText = "WalkSpeed"
+speedBox.TextColor3 = Color3.new(1,1,1)
+speedBox.BackgroundColor3 = Color3.fromRGB(60,0,0)
+speedBox.Parent = frame
+Instance.new("UICorner", speedBox).CornerRadius = UDim.new(0,8)
+
+local applySpeed = Instance.new("TextButton")
+applySpeed.Size = UDim2.new(0.4, -10, 0, 30)
+applySpeed.Position = UDim2.new(0.6, 0, 0, 130)
+applySpeed.Text = "Set"
+applySpeed.TextColor3 = Color3.new(1,1,1)
+applySpeed.BackgroundColor3 = Color3.fromRGB(120,0,0)
+applySpeed.Parent = frame
+Instance.new("UICorner", applySpeed).CornerRadius = UDim.new(0,8)
+
+applySpeed.MouseButton1Click:Connect(function()
+	local num = tonumber(speedBox.Text)
+	if num and num > 0 then
+		desiredWalkSpeed = num
+		local hum = player.Character and player.Character:FindFirstChildOfClass("Humanoid")
+		if hum then hum.WalkSpeed = desiredWalkSpeed end
+		task.spawn(applyWalkSpeed)
+	end
+end)
+
+-- DISABLE KILL PARTS BUTTON
+local killButton = Instance.new("TextButton")
+killButton.Size = UDim2.new(1, -20, 0, 30)
+killButton.Position = UDim2.new(0, 10, 0, 165)
+killButton.Text = "Disable Kill Parts"
+killButton.TextColor3 = Color3.new(1,1,1)
+killButton.BackgroundColor3 = Color3.fromRGB(90,0,0)
+killButton.Parent = frame
+Instance.new("UICorner", killButton).CornerRadius = UDim.new(0,8)
+
+-- DROPDOWN CONTAINER
+local dropdownContainer = Instance.new("Frame")
+dropdownContainer.Size = UDim2.new(1, -20, 0, 0)
+dropdownContainer.Position = UDim2.new(0, 10, 0, 200)
+dropdownContainer.BackgroundColor3 = Color3.fromRGB(35,35,35)
+dropdownContainer.ClipsDescendants = true
+dropdownContainer.Visible = false
+dropdownContainer.Parent = frame
+Instance.new("UICorner", dropdownContainer).CornerRadius = UDim.new(0,12)
+
+local layout = Instance.new("UIListLayout")
+layout.Parent = dropdownContainer
+layout.Padding = UDim.new(0,2)
+
+-- CREATE BUTTONS
+for _, data in ipairs(locations) do
+	local name = data[1]
+	local provider = data[2]
+
+	local option = Instance.new("TextButton")
+	option.Size = UDim2.new(1, 0, 0, 32)
+	option.Text = name
+	option.TextColor3 = Color3.new(1,1,1)
+	option.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+	option.BorderSizePixel = 0
+	option.Parent = dropdownContainer
+
+	option.MouseButton1Click:Connect(function()
+		dropdownButton.Text = name
+		local target = typeof(provider) == "function" and provider() or provider
+		tweenTo(target)
+		dropdownContainer.Visible = false
+		dropdownContainer.Size = UDim2.new(1,-20,0,0)
+	end)
+end
+
+-- DROPDOWN TOGGLE
+local open = false
+dropdownButton.MouseButton1Click:Connect(function()
+	open = not open
+	if open then
+		dropdownContainer.Visible = true
+		dropdownContainer.Size = UDim2.new(1,-20,0,#locations*34 + 40)
+	else
+		dropdownContainer.Visible = false
+		dropdownContainer.Size = UDim2.new(1,-20,0,0)
+	end
+end)
+
+-- REMOVE KILL PARTS
+local function removeKillParts()
+	for _, obj in ipairs(workspace:GetDescendants()) do
+		if obj:IsA("BasePart") or obj:IsA("Model") then
+			if string.find(string.lower(obj.Name), "kill") then
+				obj:Destroy()
+			end
+		end
+	end
+end
+
+killButton.MouseButton1Click:Connect(function()
+	killRemoveEnabled = not killRemoveEnabled
+
+	if killRemoveEnabled then
+		killButton.Text = "Disable Kill Parts"
+		killButton.BackgroundColor3 = Color3.fromRGB(90,0,0)
+
+		killLoop = task.spawn(function()
+			while killRemoveEnabled do
+				removeKillParts()
+				task.wait(1)
+			end
+		end)
+	else
+		killButton.Text = "Disable Kill Parts"
+		killButton.BackgroundColor3 = Color3.fromRGB(90,0,0)
+		killRemoveEnabled = false
+	end
+end)
+
+-- MINIMIZE
+local minimized = false
+minimizeButton.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	if minimized then
+		homeButton.Visible = false
+		dropdownButton.Visible = false
+		speedBox.Visible = false
+		applySpeed.Visible = false
+		dropdownContainer.Visible = false
+		killButton.Visible = false
+		frame.Size = UDim2.new(0,200,0,60)
+	else
+		homeButton.Visible = true
+		dropdownButton.Visible = true
+		speedBox.Visible = true
+		applySpeed.Visible = true
+		killButton.Visible = true
+		frame.Size = UDim2.new(0,200,0,210)
+	end
+end)
